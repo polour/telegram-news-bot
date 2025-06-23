@@ -1,6 +1,6 @@
 services:
   - type: worker
-    name: telegram-news-bot-v2
+    name: telegram-news-rss-bot
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
