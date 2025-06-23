@@ -6,35 +6,40 @@ import feedparser
 from telegram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-# 🔐 اطلاعات API
 TELEGRAM_BOT_TOKEN = "8128158054:AAG5Y4acYdrBT3Lgu2p0cp-crYk0H2Anpxk"
 CHANNEL_ID = "@firsttnews"
-OPENAI_API_KEY = "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"  # ← باید با کلید جدید جایگزین شود
+OPENAI_API_KEY = "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"  # ← جایگزین شود با کلید معتبر
 openai.api_key = OPENAI_API_KEY
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-RSS_FEEDS = [
-    "https://www.isna.ir/rss",
-    "https://www.farsnews.ir/rss",
-    "https://mehrnews.com/rss",
-    "https://www.bbc.com/persian/index.xml",
-    "https://www.iranintl.com/fa/rss"
-]
+# منابع خبری با نام + ایموجی
+RSS_FEEDS = {
+    "https://www.isna.ir/rss": ("🟢 ایسنا",),
+    "https://www.farsnews.ir/rss": ("🔴 فارس‌نیوز",),
+    "https://mehrnews.com/rss": ("🟠 مهر",),
+    "https://www.bbc.com/persian/index.xml": ("🟦 BBC فارسی",),
+    "https://www.iranintl.com/fa/rss": ("🟥 ایران اینترنشنال",),
+}
 
 def fetch_rss_articles():
     articles = []
-    for feed_url in RSS_FEEDS:
+    for feed_url, (source_name,) in RSS_FEEDS.items():
         try:
             parsed = feedparser.parse(feed_url)
             for entry in parsed.entries[:3]:
                 title = entry.title
                 link = entry.link
                 description = getattr(entry, 'description', '')
-                articles.append({"title": title, "link": link, "description": description})
+                articles.append({
+                    "title": title,
+                    "link": link,
+                    "description": description,
+                    "source": source_name
+                })
         except Exception as e:
-            logger.error(f"خطا در خواندن RSS: {feed_url} -- {e}")
+            logger.error(f"خطا در RSS ({source_name}): {e}")
     return articles
 
 def summarize_text(text):
@@ -53,12 +58,12 @@ def summarize_text(text):
 
 def format_article(article):
     summary = summarize_text(article["description"] or article["title"])
-    return f"📰 {article['title']}\n📄 خلاصه: {summary}\n🔗 {article['link']}"
+    return f"{article['source']}\n📰 {article['title']}\n📄 خلاصه: {summary}\n🔗 {article['link']}"
 
 sent_messages = set()
 
 async def send_to_telegram(bot):
-    logger.info("📡 در حال دریافت اخبار از RSS...")
+    logger.info("📡 در حال دریافت اخبار از منابع...")
     articles = fetch_rss_articles()
     for article in articles:
         msg = format_article(article)
