@@ -71,9 +71,11 @@ def save_sent_link(link):
         f.write(link + "\n")
 
 async def send_to_telegram(bot):
-    logger.info("📡 در حال دریافت اخبار از منابع...")
+    logger.info("📡 در حال بررسی اخبار جدید...")
     sent_links = load_sent_links()
     articles = fetch_rss_articles()
+    has_new = False
+
     for article in articles:
         if article["link"] in sent_links:
             continue
@@ -82,8 +84,12 @@ async def send_to_telegram(bot):
             await bot.send_message(chat_id=CHANNEL_ID, text=msg)
             save_sent_link(article["link"])
             logger.info("✅ پیام ارسال شد")
+            has_new = True
         except Exception as e:
             logger.error("❌ خطا در ارسال پیام: %s", e)
+
+    if not has_new:
+        logger.info("📭 خبر جدیدی برای ارسال وجود نداشت.")
 
 async def main():
     bot = Bot(token=TELEGRAM_BOT_TOKEN)

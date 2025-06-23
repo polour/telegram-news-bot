@@ -1,6 +1,6 @@
 services:
   - type: worker
-    name: telegram-news-rss-nodup-bot
+    name: telegram-news-rss-final
     runtime: python
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
