@@ -2,10 +2,10 @@ import asyncio
 import logging
 import requests
 import openai
-from telegram.ext import ApplicationBuilder
+from telegram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-# 🔐 اطلاعات API ثابت‌شده
+# 🔐 اطلاعات API
 TELEGRAM_BOT_TOKEN = "8128158054:AAG5Y4acYdrBT3Lgu2p0cp-crYk0H2Anpxk"
 CHANNEL_ID = "@firsttnews"
 OPENAI_API_KEY = "32d31caef139494eaf34536cec853989"
@@ -50,6 +50,7 @@ def format_news(article):
 sent_messages = set()
 
 async def send_to_telegram(bot):
+    logger.info("📡 در حال دریافت اخبار از GNews...")
     news_list = fetch_news()
     for article in news_list:
         msg = format_news(article)
@@ -57,19 +58,16 @@ async def send_to_telegram(bot):
             try:
                 await bot.send_message(chat_id=CHANNEL_ID, text=msg)
                 sent_messages.add(msg)
+                logger.info("✅ پیام ارسال شد")
             except Exception as e:
                 logger.error("❌ خطا در ارسال پیام: %s", e)
 
 async def main():
-    app = ApplicationBuilder().token(TELEGRAM_BOT_TOKEN).build()
-    bot = app.bot
-
+    bot = Bot(token=TELEGRAM_BOT_TOKEN)
     await send_to_telegram(bot)
-
     scheduler = AsyncIOScheduler()
     scheduler.add_job(send_to_telegram, 'interval', minutes=5, args=[bot])
     scheduler.start()
-
     while True:
         await asyncio.sleep(3600)
 
