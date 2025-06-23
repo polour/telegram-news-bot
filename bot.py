@@ -6,9 +6,10 @@ import feedparser
 from telegram import Bot
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
+# کلیدها مستقیماً درون فایل (نه از ENV)
 TELEGRAM_BOT_TOKEN = "8128158054:AAG5Y4acYdrBT3Lgu2p0cp-crYk0H2Anpxk"
 CHANNEL_ID = "@firsttnews"
-OPENAI_API_KEY = "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"
+OPENAI_API_KEY = "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"
 openai.api_key = OPENAI_API_KEY
 
 logging.basicConfig(level=logging.INFO)
@@ -51,12 +52,18 @@ def summarize_text(text):
             }],
             max_tokens=80
         )
-        return response.choices[0].message.content.strip()
+        summary = response.choices[0].message.content.strip()
+        if summary.lower().startswith("https://") or len(summary) < 5:
+            raise ValueError("خروجی خلاصه معتبر نیست")
+        return summary
     except Exception as e:
-        return f"⚠️ خطای GPT: {e}"
+        logger.warning(f"⚠️ خطای خلاصه‌سازی: {e}")
+        return None
 
 def format_article(article):
     summary = summarize_text(article["description"] or article["title"])
+    if not summary:
+        return None
     return f"{article['source']}\n📰 {article['title']}\n📄 خلاصه: {summary}\n🔗 {article['link']}"
 
 def load_sent_links():
@@ -71,7 +78,7 @@ def save_sent_link(link):
         f.write(link + "\n")
 
 async def send_to_telegram(bot):
-    logger.info("📡 در حال بررسی اخبار جدید...")
+    logger.info("📡 بررسی خبرهای جدید آغاز شد...")
     sent_links = load_sent_links()
     articles = fetch_rss_articles()
     has_new = False
@@ -80,16 +87,17 @@ async def send_to_telegram(bot):
         if article["link"] in sent_links:
             continue
         msg = format_article(article)
-        try:
-            await bot.send_message(chat_id=CHANNEL_ID, text=msg)
-            save_sent_link(article["link"])
-            logger.info("✅ پیام ارسال شد")
-            has_new = True
-        except Exception as e:
-            logger.error("❌ خطا در ارسال پیام: %s", e)
+        if msg:
+            try:
+                await bot.send_message(chat_id=CHANNEL_ID, text=msg)
+                save_sent_link(article["link"])
+                logger.info("✅ پیام ارسال شد")
+                has_new = True
+            except Exception as e:
+                logger.error("❌ خطا در ارسال پیام: %s", e)
 
     if not has_new:
-        logger.info("📭 خبر جدیدی برای ارسال وجود نداشت.")
+        logger.info("📭 هیچ خبر جدیدی ارسال نشد.")
 
 async def main():
     bot = Bot(token=TELEGRAM_BOT_TOKEN)
