@@ -8,13 +8,12 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 TELEGRAM_BOT_TOKEN = "8128158054:AAG5Y4acYdrBT3Lgu2p0cp-crYk0H2Anpxk"
 CHANNEL_ID = "@firsttnews"
-OPENAI_API_KEY = "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"  # ← جایگزین شود با کلید معتبر
+OPENAI_API_KEY = "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"
 openai.api_key = OPENAI_API_KEY
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# منابع خبری با نام + ایموجی
 RSS_FEEDS = {
     "https://www.isna.ir/rss": ("🟢 ایسنا",),
     "https://www.farsnews.ir/rss": ("🔴 فارس‌نیوز",),
@@ -60,20 +59,31 @@ def format_article(article):
     summary = summarize_text(article["description"] or article["title"])
     return f"{article['source']}\n📰 {article['title']}\n📄 خلاصه: {summary}\n🔗 {article['link']}"
 
-sent_messages = set()
+def load_sent_links():
+    try:
+        with open("sent_links.txt", "r", encoding="utf-8") as f:
+            return set(line.strip() for line in f.readlines())
+    except FileNotFoundError:
+        return set()
+
+def save_sent_link(link):
+    with open("sent_links.txt", "a", encoding="utf-8") as f:
+        f.write(link + "\n")
 
 async def send_to_telegram(bot):
     logger.info("📡 در حال دریافت اخبار از منابع...")
+    sent_links = load_sent_links()
     articles = fetch_rss_articles()
     for article in articles:
+        if article["link"] in sent_links:
+            continue
         msg = format_article(article)
-        if msg not in sent_messages:
-            try:
-                await bot.send_message(chat_id=CHANNEL_ID, text=msg)
-                sent_messages.add(msg)
-                logger.info("✅ پیام ارسال شد")
-            except Exception as e:
-                logger.error("❌ خطا در ارسال پیام: %s", e)
+        try:
+            await bot.send_message(chat_id=CHANNEL_ID, text=msg)
+            save_sent_link(article["link"])
+            logger.info("✅ پیام ارسال شد")
+        except Exception as e:
+            logger.error("❌ خطا در ارسال پیام: %s", e)
 
 async def main():
     bot = Bot(token=TELEGRAM_BOT_TOKEN)
