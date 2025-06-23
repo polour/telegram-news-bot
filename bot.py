@@ -8,7 +8,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 # 🔐 اطلاعات API
 TELEGRAM_BOT_TOKEN = "8128158054:AAG5Y4acYdrBT3Lgu2p0cp-crYk0H2Anpxk"
 CHANNEL_ID = "@firsttnews"
-OPENAI_API_KEY = "32d31caef139494eaf34536cec853989"
+OPENAI_API_KEY = "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"
 GNEWS_API_KEY = "cd8bac877e90fe11cb7049cd991b0468"
 
 openai.api_key = OPENAI_API_KEY
