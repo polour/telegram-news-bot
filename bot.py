@@ -12,9 +12,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 RSS_FEEDS = {
-    "https://www.isna.ir/rss": ("🟢 ایسنا",),
+    "https://www.isna.ir/rss": ("🟢خبر گذاری ایسنا",),
     "https://www.farsnews.ir/rss": ("🔴 فارس‌نیوز",),
-    "https://mehrnews.com/rss": ("🟠 مهر",),
+    "https://mehrnews.com/rss": ("🟠 خبرگذاری مهر",),
     "https://www.bbc.com/persian/index.xml": ("🟦 BBC فارسی",),
     "https://www.iranintl.com/fa/rss": ("🟥 ایران اینترنشنال",),
 }
