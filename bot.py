@@ -1,22 +1,20 @@
-
 import asyncio
+import logging
 import requests
 import openai
-import os
-import logging
-from telegram import Bot
 from telegram.ext import ApplicationBuilder
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-TELEGRAM_BOT_TOKEN = os.environ.get("8128158054:AAG5Y4acYdrBT3Lgu2p0cp-crYk0H2Anpxk")
-CHANNEL_ID = os.environ.get("@firsttnews")
-OPENAI_API_KEY = os.environ.get("32d31caef139494eaf34536cec853989")
-GNEWS_API_KEY = os.environ.get("cd8bac877e90fe11cb7049cd991b0468")
+# 🔐 اطلاعات API ثابت‌شده
+TELEGRAM_BOT_TOKEN = "8128158054:AAG5Y4acYdrBT3Lgu2p0cp-crYk0H2Anpxk"
+CHANNEL_ID = "@firsttnews"
+OPENAI_API_KEY = "32d31caef139494eaf34536cec853989"
+GNEWS_API_KEY = "cd8bac877e90fe11cb7049cd991b0468"
 
 openai.api_key = OPENAI_API_KEY
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 def fetch_news():
     url = f"https://gnews.io/api/v4/top-headlines?lang=fa&max=5&token={GNEWS_API_KEY}"
